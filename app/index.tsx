@@ -1,3 +1,4 @@
+import { getAllPets } from "@/api/pets";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -14,7 +15,7 @@ import { pets as initialPets, Pet } from "../data/pets";
 
 export default function Index() {
   const router = useRouter();
-  const [pets, setPets] = useState<Pet[]>(initialPets);
+  const [pets, setPets] = useState(initialPets);
   const [modalVisible, setModalVisible] = useState(false);
 
   const handlePetPress = (id: number) => {
@@ -25,6 +26,11 @@ export default function Index() {
     setPets([newPet, ...pets]);
   };
 
+  const handleData = async () => {
+    const pets = await getAllPets();
+    setPets(pets);
+  };
+
   return (
     <>
       <TouchableOpacity
@@ -32,6 +38,12 @@ export default function Index() {
         style={styles.headerButton}
       >
         <Text style={styles.headerButtonText}>Add Pet</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handleData()}
+        style={styles.headerButton}
+      >
+        <Text style={styles.headerButtonText}>Get All Pets</Text>
       </TouchableOpacity>
 
       <SafeAreaView style={styles.container} edges={["bottom"]}>
