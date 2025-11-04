@@ -1,3 +1,5 @@
+import { createPet } from "@/api/pets";
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -15,27 +17,46 @@ interface AddPetModalProps {
   visible: boolean;
   onClose: () => void;
   onAdd: (pet: Pet) => void;
+  refetchPets: () => void;
 }
 
 export const AddPetModal: React.FC<AddPetModalProps> = ({
   visible,
   onClose,
   onAdd,
+  refetchPets,
 }) => {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [adopted, setAdopted] = useState("");
   const [image, setImage] = useState("");
 
-  const handleAdd = () => {
+  const { mutate } = useMutation({
+    mutationKey: ["createPet"],
+    mutationFn: (pet: Pet) => {
+      return createPet(pet.name, pet.image, pet.type, pet.adopted);
+    },
+    onSuccess: () => {
+      alert("Pet was added!");
+      refetchPets();
+    },
+  });
+
+  const handleAdd = async () => {
     if (name.trim() && type.trim()) {
       const maxId = Date.now(); // Generate unique ID using rtimestamp
+      mutate({ id: maxId, name, image, type, adopted });
+      const newPet = await createPet(name, image, type, adopted);
+      onAdd(newPet);
+
       onAdd({
         id: maxId,
         name: name.trim(),
         type: type.trim(),
         adopted: adopted.trim() || "No",
-        image: image.trim() || "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=400&fit=crop",
+        image:
+          image.trim() ||
+          "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=400&fit=crop",
       });
       // Reset form
       setName("");
@@ -216,4 +237,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

@@ -1,8 +1,10 @@
-import { getPetById } from "@/api/pets";
-import { Pet } from "@/data/pets";
-import { useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import { deletePet, getPetById } from "@/api/pets";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React from "react";
+
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -14,20 +16,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PetDetails() {
   const { id } = useLocalSearchParams();
-  const [pet, setPet] = useState<Pet | null>(null);
+  const router = useRouter();
 
-  const handleGetPetById = async () => {
-    const petData = await getPetById(id as string);
-    setPet(petData);
-  };
+  const queryClient = useQueryClient();
+
+  const { data: pet, isPending } = useQuery({
+    queryKey: ["id"],
+    queryFn: () => getPetById(id as string),
+  });
+
+  const { mutate } = useMutation({
+    mutationKey: ["deletePet"],
+    mutationFn: () => deletePet(id as string),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allPets"] });
+      router.back();
+    },
+  });
+
+  if (isPending) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <View style={styles.errorContainer}>
+          <ActivityIndicator size="large" color="#6200EE" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!pet) {
     return (
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <View style={styles.errorContainer}>
-          <TouchableOpacity onPress={() => handleGetPetById()}>
-            <Text>Get Pet</Text>
-          </TouchableOpacity>
           <Text style={styles.errorText}>Pet not found!</Text>
         </View>
       </SafeAreaView>
@@ -72,6 +92,24 @@ export default function PetDetails() {
             </Text>
           </View>
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            mutate();
+          }}
+          style={{ backgroundColor: "red", margin: 20, borderRadius: 20 }}
+        >
+          <Text
+            style={{
+              textAlign: "center",
+              padding: 20,
+              fontSize: 20,
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            Delete Pet
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,4 +1,5 @@
 import { getAllPets } from "@/api/pets";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -31,6 +32,11 @@ export default function Index() {
     setPets(pets);
   };
 
+  const { data, refetch } = useQuery({
+    queryKey: ["allPets"],
+    queryFn: getAllPets,
+  });
+
   return (
     <>
       <TouchableOpacity
@@ -54,7 +60,7 @@ export default function Index() {
               <Text style={styles.emptySubtext}>Start by adding a new pet</Text>
             </View>
           ) : (
-            pets.map((pet) => (
+            data?.map((pet: Pet) => (
               <PetCard
                 key={pet.id}
                 pet={pet}
@@ -67,6 +73,7 @@ export default function Index() {
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           onAdd={handleAddPet}
+          refetchPets={refetch}
         />
       </SafeAreaView>
     </>

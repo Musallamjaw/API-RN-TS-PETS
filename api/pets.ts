@@ -10,4 +10,24 @@ const getPetById = async (id: string) => {
   return response.data;
 };
 
-export { getAllPets, getPetById };
+const createPet = async (
+  name: string,
+  image: string,
+  type: string,
+  adopted: string
+) => {
+  const response = await waiter.post("/pets", {
+    name: name,
+    image: image,
+    type: type,
+    adopted: adopted,
+  });
+  return response.data;
+};
+
+const deletePet = async (id: string) => {
+  const response = await waiter.delete(`/pets/${id}`);
+  return response.data;
+};
+
+export { createPet, deletePet, getAllPets, getPetById };
